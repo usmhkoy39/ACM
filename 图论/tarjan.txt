@@ -1,0 +1,174 @@
+//tarjan 算法
+//  存法前向星
+
+int  num=0;
+int dfn[MAXN]={0},low[MAXN];                        //dfn记录深搜到的顺序    low记录一个点能向下追溯到的最大值
+//普通tarjan,实际上就是一个dfs
+int  num=0;
+int dfn[MAXN]={0},low[MAXN];                        //dfn记录深搜到的顺序    low记录一个点能向下追溯到的最大值
+void tarjan(int x){
+    low[x]=dfn[x]=++num;                            //dfn一旦记录就不在变化，low先赋初值为其本身
+    search(i,x){
+        int y=edge[i].v;
+        if (!dfn[y]) {                              //没有被搜索过
+            tarjan(y);                              //dfs搜下一个值
+            low[x] = min(low[x], low[y]);           //回溯把后面的值传递上来
+        }else  if(x!=edge[i^1].v)                                     //被搜索过了
+            low[x] = min(low[x], dfn[y]);              // 注意这句话！！！不是min(low[x],low[y])！！！
+    }
+}
+
+
+
+
+*************************************************************************************
+*************************************************************************************
+tarjan 算法的一些变化：
+如果判断割点，如上述代码对根节点特判然后判断式为     dfn(x)<=low(y)
+如果判断割边，则不需要对根节点特判，判断式为   dfn(x)<low(y)
+如果判断强连通分量，则在返回值更新的时候需要额外增加条件ins[y]
+*************************************************************************************
+*************************************************************************************
+
+//tarjan判断割点
+
+int root=1;                  //如果图本身是一个非连通图，需要每次对root进行赋值
+bool cut[MAXN]={0};                               //用来记录一个点是否是割点
+void tarjan(int x){
+    low[x] = dfn[x] = ++num;
+    int flag = 0;                                  //在输入节点是根节点的时候用来特判
+    search(i,x){
+        int y = edge[i].v;
+        if (!dfn[y]) {                             //没有被搜索过
+            tarjan(y);                             //dfs搜下一个值
+            low[x]  =  min( low[x] ,  low[y] );//溯回把后面的值传递上来
+            if (dfn[x]<=low[y]){//说明子节点无法够溯回到这个节点之前，这个点为割点
+                flag++;
+              if(x != root ||  flag>1 )cut[x]=true;
+                }
+        }else                                //被搜索过了
+         low[x] = min(low[x], dfn[y]);
+    }
+}
+
+
+int dfn[MAXN],low[MAXN],num=0;
+int root;
+bool cut[MAXN]
+vector<int> grp[1005];int c=0;
+stack<int> st;
+void tarjan(int x){
+    dfn[x]=low[x]=++num;st.push(x);
+    if (x==root && !head[x]){grp[++c].push_back(x);return;}         //孤立点特判
+    search(i,x){
+        int y=edge[i].v;
+        if(!dfn[y]){
+            tarjan(y);                                              //因为是深搜，所以这样保证从一个点回溯后不再有
+                                                                    //因这个点产生的点双连通分量
+            int flag=0;
+            low[x]=min(low[x],low[y]);
+            if(low[y]>=dfn[x]){                                     //这是一个割点，它应该会产生数个点双连通分量
+                flag++;
+                int tmp=st.top();st.pop();                          //这里可以写成 do while ，但是个人很反感那种写法
+                grp[++c].push_back(tmp);
+                while(tmp!=y){
+                    tmp=st.top();st.pop();
+                    grp[c].push_back(tmp);
+                }
+               grp[c].push_back(x);                      //如果这是一个割点，从这个点回溯之前，不可以把这个点从队列拿出
+               if(x != root ||  flag>1 )cut[x]=true;
+            }                                            //因为它可能属于多个点双
+        }else
+            low[x]=min(low[x],dfn[y]);
+    }
+}
+
+
+***********************************************************************************
+//tarjan判割边
+//割边：如果删掉一条边之后连通块增加,则该边叫做割边
+bool bridge[MAXM]={0};                             //用来记录一条边是否是割边
+void tarjan(int x){
+    low[x]=dfn[x]=++num;                        //dfn一旦记录就不在变化，low先赋初值为其本值
+    search(i,x){
+        int y=edge[i].v;
+        if (!dfn[y]) {                          //没有被搜索过
+            tarjan(y);
+            low[x] = min(low[x], low[y]);       //溯回把后面的值传递上来
+            if (dfn[x] < low[y])                //说明后面的值无法够溯回到这个节点，这条边为割边
+                bridge[i] = true;
+        }else
+         low[x] = min(low[x], dfn[y]);
+    }
+}
+
+*************************************************************************************
+//求有向图中的环的有效手段
+//跑完之后属于同一个强连通分量的点grp相同，且已经完成了反向拓扑排序
+int dfn[MAXN]={0},low[MAXN];    //dfn记录深搜到的顺序    low记录一个点能向下追溯到的最大值
+int num=0,code=0,grp[MAXN];
+bool ins[MAXN];
+stack<int> s;
+void tarjan(int x) {
+    dfn[x] = low[x] = ++num;
+    s.push(x), ins[x] = 1;
+    search(i, x) {
+        int y = edge[i].v;
+        if (!dfn[y]) {
+            tarjan(y);
+            low[x] = min(low[x], low[y]);
+        } else if (ins[y])//如果这个追溯回去的节点不在队列里面就不可能存在强连通
+            low[x] = min(low[x], dfn[y]);
+    }
+        if (dfn[x] <= low[x]) {
+            code++;
+            int k=s.top();
+            s.pop();grp[k]=code,ins[k]=0;
+            while (x != k){
+                k = s.top(), s.pop();
+                ins[k] = 0;
+                grp[k] = code;
+            }
+        }
+}
+void Tarjan(){
+	for(int i=1;i<=n;i++)
+		if(!dfn[i])
+			tarjan(i);
+}
+
+
+       for(int i=1;i<=cnt;i++){
+            int x=edge[i].u,y=edge[i].v;
+                if(grp[x]!=grp[y])
+                   deg[grp[y]]++;
+        }
+**************************************************************************
+//点双连通分量
+int dfn[MAXN],low[MAXN],num=0;
+int root;
+vector<int> grp[1005];int c=0;
+stack<int> st;
+void tarjan(int x){
+    dfn[x]=low[x]=++num;st.push(x);
+    if (x==root && !head[x]){grp[++c].push_back(x);return;}         //孤立点特判
+    search(i,x){
+        int y=edge[i].v;
+        if(!dfn[y]){
+            tarjan(y);                                              //因为是深搜，所以这样保证从一个点回溯后不再有
+                                                                    //因这个点产生的点双连通分量
+            low[x]=min(low[x],low[y]);
+            if(low[y]>=dfn[x]){                                     //这是一个割点，它应该会产生数个点双连通分量
+                int tmp=st.top();st.pop();                          //这里可以写成 do while ，但是个人很反感那种写法
+                grp[++c].push_back(tmp);
+                while(tmp!=y){
+                    tmp=st.top();st.pop();
+                    grp[c].push_back(tmp);
+                }
+               grp[c].push_back(x);                      //如果这是一个割点，从这个点回溯之前，不可以把这个点从队列拿出
+            }                                            //因为它可能属于多个点双
+        }else
+            low[x]=min(low[x],dfn[y]);
+    }
+}
+

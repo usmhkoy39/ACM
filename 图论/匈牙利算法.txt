@@ -1,0 +1,36 @@
+//匈牙利算法求最大二分匹配,适用于稠密图，稀疏图直接转隔壁dinic
+//本质是个贪心算法
+//最大二分匹配的方法不唯一，但是最大二分匹配的个数是唯一的
+//为了方便，一下称左边的人寻找右边的人配对
+//算法时间复杂度为O(m*n) ，经过前向星优化后为O（m+n），dinic求二分时间复杂度为O(m* n^1/2),故废弃
+
+
+
+bool used[MAXN];//用过了为1
+bool edge[MAXN][MAXN];//左边的在左括号,这是一个邻接矩阵
+bool select[MAXN];//配对关系
+//调用前记得置used要置0
+bool Ed(int x,int m){//右边人数
+    for(int i=1;i<=m;i++){
+        if(edge[x][i]&&!used[i]){
+            used[i]= true;//used每次调用都要置零，如果调用某个数不成功，那么后面的所有数据调用这个数据也不会成功
+            if(select[i]==0||Ed(select[i],m)){//没有配对或者之前与ta配对的找得到其他配对
+                select[i]=x;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int Edmonds(int n,int m){//左边的人数，右边的人数
+    int c=0;
+    for(int i=1;i<=n;i++){//遍历左边的每个人
+        memset(used,0, sizeof(used));
+        if(Ed(i,m)) c++;//如果找得到配对就++
+    }
+    return c;
+}
+
+//另 最小覆盖集等于最大匹配数
+//最小覆盖集:选择x个点,所有边的至少一个端点被选择 , 则这个点集的大小叫做最小覆盖集

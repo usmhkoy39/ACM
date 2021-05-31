@@ -1,0 +1,35 @@
+//求图中的一条欧拉路(可以不是回路)
+//欧拉路就是一笔画问题,如果是哈密顿路,是没有多项式解法的
+//ans中存放的是经过点，需要路径需要稍改
+int usedWay[MAXN],deg[MAXN];
+stack<int> s;stack<int> ans;
+void path(int r){
+   s.push(r);                                       //将起始点压入队中
+   while(!s.empty()){
+       int x=s.top(),i=head[x];
+       while(i && used_way[i])i = edge[i].next;     //找到一条未访问的边
+       if(i){
+           s.push(edge[i].v);
+           used_way[i]=used_way[i^1]=true;          //此处如果不把对应的边取true，每条边会恰好经过两次
+           head[x]=edge[i].next;
+       }else{                                      //如果这个点的所有出边都被访问
+           s.pop();
+           ans.push(x);                            //从系统栈放入答案栈中
+       }
+   }
+}
+int Eular(){ //0无欧拉路  1为欧拉路  2为欧拉回路
+    int num=0,r=1;
+    for(int i=1;i<=n;i++)
+        search(j,i)deg[edge[j].v]++;  //记录每个点的度数
+    for(int i=1;i<=n;i++){
+        if(!deg[i])return 0;          //图不连通
+        if(deg[i]%2)
+            num++,r=i;
+        if(num>2)return 0;            //奇数点超过2个，没有欧拉路
+    }
+    path(r);
+    if(num==2)
+        return 1;
+    return 2;
+}

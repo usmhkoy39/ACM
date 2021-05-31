@@ -1,0 +1,28 @@
+
+//从点的角度求最小生成树，复杂度为O(N^2)，储存方式邻接矩阵
+//在稠密图中效果优于kru，稀疏图中劣于kru
+//可以用二叉堆优化到O(M+N)但是涉及到边了不如直接上kru
+
+int edge[MAXN][MAXN];//邻接矩阵存边
+bool used[MAXN]={0};
+int d[MAXN];
+int Prim(int n){
+    memset(d,inf,sizeof(d));
+    memset(used,0,sizeof(used));
+    d[1]=0;
+    for(int i=1;i<n;i++){                     //一共只需要进行n-1次操作
+        int x=0;
+        for(int j=1;j<=n;j++)
+            if(!used[j]&&(x==0||d[x]>d[j]))   //遍历找出没有用过并且距离已选遍最近的点
+                x=j;
+        used[x]= true;
+        for(int y=1;y<=n;y++)
+            if(!used[y])d[y]=min(d[y],edge[x][y]);
+    }
+    int  ans=0;
+    for(int i=1;i<=n;i++){
+        ans+=d[i];
+        if(ans>=inf)return -1;//图不连通则返回-1
+    }
+    return ans;
+}

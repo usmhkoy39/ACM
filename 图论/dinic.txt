@@ -1,0 +1,44 @@
+//普普通通的最大流，建好图设好S,T即可调用NetFlow直接食用
+//不要忘了源点汇点的拟定，请使用专用的插边方法
+void CreatEdge(int u,int v,int h){
+    add(u,v,h);
+    add(v,u,0);
+}
+int d[MAXN],S,T;//深度,源点,汇点
+bool pre_dinic(){
+    memset(d,0,sizeof(d));d[S]=1;
+    queue<int> que;que.push(S);//从源点开始广度优先遍历生成一个分层图
+    while(!que.empty()){
+        int x=que.front();que.pop();
+        search(i,x){
+            int y=edge[i].v;
+            if(!edge[i].c||d[y])continue;//如果一条边没有容量了，就不再考虑
+            d[y]=d[x]+1;
+            if(y==T)return true; //第一次走到汇点，一个分层图就建立完毕了
+            que.push(y);
+        }
+    }
+    return false;
+}
+
+int dinic(int x,int flow){
+    if(x==T)return flow;
+    int rest=flow;
+    search(i,x){
+        if(!rest)return flow;//这个节点的所有容量都被利用了，根据贪心这个解是最优的
+        int y=edge[i].v;
+        if(edge[i].c&&d[y]==d[x]+1){
+            int f=dinic(y,min(rest,edge[i].c));//可用流量为当前容量和边的容量的最小值
+            if(!f)d[y]=0;//剪枝
+            rest-=f;
+            edge[i].c-=f;edge[i^1].c+=f;//给返回的流量开路
+        }
+    }
+    return flow-rest;
+}
+int NetFlow(){
+    int ans=0;
+    while(pre_dinic())
+        ans+=dinic(S,inf);
+    return ans;
+}

@@ -1,0 +1,39 @@
+//已经被树链剖分取代
+//LCA算法求树上两个节点的最近公共祖先节点
+//预处理时间为O(n*logn)  询问时间为O(logn)
+
+
+int LCA[MAXN][20];                //能往上遍历 2^20的父节点
+int d[MAXN];                      //记录每个节点的深度
+bool used[MAXN];
+void pre_lca(int root){
+    memset(used,0,sizeof(used));
+    d[root]=0;
+    for(int i=0;i<20;i++)LCA[root][i]=root;
+    queue<int> que;
+    que.push(root);
+    while(!que.empty()){
+        int x=que.front();que.pop();
+        if(used[x])continue;
+        used[x]=1;
+        search(i,x){
+            int y=edge[i].v;//x是y的父亲节点
+            if(used[y])continue;
+            d[y]=d[x]+1;
+            LCA[y][0]=x;
+            for(int j=1;j<20;j++)
+                LCA[y][j]=LCA[LCA[y][j-1]][j-1];//LCA[X][I]为节点x往上走2^I个节点得到的祖先节点
+            que.push(y);
+        }
+    }
+}
+
+int lca(int x,int y){
+    if(d[x]<d[y])swap(x,y);//使x比y更加深
+    for(int i=20-1;i>=0;i--)
+        if(d[LCA[x][i]]>=d[y])x=LCA[x][i];//将x放到y同一深度
+    if(x==y)return x;//说明y是x的父节点
+    for(int i=19;i>=0;i--)
+        if(LCA[x][i]!=LCA[y][i])x=LCA[x][i],y=LCA[y][i];//在xy处于不同节点的情况下尽可能上放
+    return LCA[x][0];
+}

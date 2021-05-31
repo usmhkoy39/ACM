@@ -1,0 +1,16 @@
+//简简单单并查集
+struct DisjointSet {
+    int n;
+    int root[MAXN];
+    void init(int x){
+        n=x;
+        for(int i=1;i<=n;i++)root[i]=i;
+    }
+    int find(int x){
+        if(x!=root[x])
+            root[x]=find(root[x]);
+        return root[x];
+    }
+    void merge(int x,int y){root[find(x)]=find(y);}//将x合并到y中}
+    bool judge(int x,int y){return find(x)==find(y);}
+}grp;

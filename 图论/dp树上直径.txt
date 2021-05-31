@@ -1,0 +1,15 @@
+//需要具体路径请使用二次bfs
+//但是二次bfs不能在有负权的图上使用，在有负权的图上请用dp
+//一棵树上最远的两个点的距离叫做树的直径
+bool used[MAXN]={false};
+int ans=-inf;
+void dp(int x){
+    used[x]=1;
+    search(i,x){
+        int y=edge[i].v;
+        if(used[y])continue;
+        dp(y);
+        ans = max(ans,d[x]+d[y]+edge[i].c);
+        d[x]=max(d[x],d[y]+edge[i].c);
+    }
+}

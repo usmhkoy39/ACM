@@ -1,0 +1,17 @@
+//广度优先遍历生成一个分层图,一般用在最大流上面
+//单独使用没有什么价值
+void Bfs(){
+    memset(d,0,sizeof(d));
+    d[root]=1;
+    queue<int> que;
+    que.push(root);//广度优先遍历生成一个分层图
+    while(!que.empty()){
+        int x=que.front();que.pop();
+        search(i,x){
+            int y=edge[i].v;
+            if(d[y])continue;
+            d[y]=d[x]+1;
+            que.push(y);
+        }
+    }
+}

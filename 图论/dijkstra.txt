@@ -1,0 +1,23 @@
+//时间复杂度为O(E+n*n)
+//dijkstra求单源最短路
+//无法处理出现负权图
+int  dis[MAXN];                                          //记录最短距离
+void dij(int r){                                         //根节点
+    memset(dis,inf,sizeof(dis));
+    dis[r]=0;
+    priority_queue<pii,vector<pii>,greater<pii> > que;
+    que.push({0,r});
+    while(!que.empty()){
+        pii nod=que.top();que.pop();
+        int x=nod.second;
+        if(nod.first>dis[x])continue;                    //不需要再次更新
+        search(i,x){
+            int tmp=nod.first+edge[i].c;
+            int y=edge[i].v;
+            if(dis[y]>tmp){
+                dis[y]=tmp;
+                que.push({tmp,y});
+            }
+        }
+    }
+}

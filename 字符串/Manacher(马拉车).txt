@@ -1,0 +1,73 @@
+概念：
+Manacher（马拉车），处理回文串，以O（n）时间处理以每个字符为中心的回文串长度。
+在每个字符间隔插入一个符号以统一解决字符串长度奇偶情况，例子原串：abaaba，得：#a#b#a#a#b#a#,故得到#a#b#a#(奇数，b为中心)，#a#b#a#a#b#a#(偶数，#为中心)
+p[i]（以第i+1个字符为中心的最大回文串长度）,id最长回文串的中心位置,max以该回文串为中心所延展的最远位置
+当我搜索到p[i]时，若(p[2*id-i],max-i),随后暴力匹配，更新id与max
+
+综上所述：求出id为中心的最长回文串时，在进行一次内部的最长回文串，若长度超过max，则对max进行拓展，更新di与max
+
+适用问题：
+
+例子：
+HDU3068 最长回文——Manacher（模板题，最大回文串长度）
+http://acm.hdu.edu.cn/showproblem.php?pid=3068
+
+步骤：
+
+图例：
+
+模板：
+#define _CRT_SECURE_NO_WARNINGS
+#include<iostream>
+#include<algorithm>
+#include<cstdio>
+#include<cstring>
+using namespace std;
+typedef long long ll;
+const int INF = 0x3f3f3f3f;
+const int N = 1e6 + 10;
+const int maxn = 3e5;   //注意结点数
+char a[maxn];
+char b[maxn];
+int p[maxn];
+
+void  init(char* str) {     //b数组要开最大长度的两倍+1
+    b[0] = '*';
+    int l=1;
+    b[l++] = '#';
+    int len1 = strlen(str);
+    for (int i = 0; i < len1; i++) {
+        b[l++] = str[i];
+        b[l++] = '#';
+    }
+    b[l++]='%';
+}
+
+void manacher(char* str,int len2) {
+    int id = 0, mx = 0;
+    for (int i = 1; i < len2; i++) {    //正式的字符串从i=1开始,需注意实际b的长度为2*len+3,因为最后还有一个结束标记’%‘，但是这里len2=2*len+2，没有影响，因为’*‘不会增加最长回文串长度
+        p[i]=mx>i?min(p[2 * id - i], mx - i):1;
+        while(str[i + p[i]] == str[i - p[i]])   //当以i为中心，p[i]为半径的字符串为回文字符串时
+            p[i]++;
+        if (p[i] + i > mx) {            //最长回文串的结束位置>原回文串最远位置时，更新mx与id
+            mx = p[i] + i;
+            id = i;
+        }
+    }
+}
+
+int main() {
+    while (scanf("%s", a)!=EOF) {
+        init(a);
+        memset(p,0,sizeof(p));
+        int len = 2*strlen(a)+2;    //b字符串有效长度
+        manacher(b,len);
+        int ans = 0;
+        for (int i = 0; i < len; i++)
+            ans = max(ans, p[i]);
+        printf("%d\n", ans - 1);
+    }
+}
+
+注：
+时间复杂度为O（n），由于字符串hash与后缀数组得的O（n*logn）

@@ -1,0 +1,314 @@
+概念：
+AC自动机:再KMP基础上解决多模式的匹配问题，故数组结构肯定不行，所以使用字典树（Trie树）来实现。多模式匹配——例：原字符串单词{he her she}；匹配串s,ahershe，在s串中找出尽可能多的单词。
+若使用KMP，至少需要3次，取决于单词数量，复杂度O(n*n)。故对原字符串建立Trie树，在Trie上遍历一遍（O(n)）即可找到所有匹配单词。
+
+需先掌握：字典树（Trie树），字符串前缀和与后缀和，
+
+实际上AC自动机只是比Trie树多了一个fail，用作指向最大后缀和相等的节点，使得a单词时的最大后缀和能够用在查询b单词上，同时通过修改（原Trie树中的flag）实现查询区间，出现次数等等的功能。
+
+适用问题：
+
+例子：
+HDU2222Keywords Search(AC自动机模板题，求模式串个数)
+http://acm.hdu.edu.cn/showproblem.php?pid=2222
+HDU5384Danganronpa（AC自动机模板题，多个匹配串的模式串个数）
+http://acm.hdu.edu.cn/showproblem.php?pid=5384
+
+步骤：
+
+图例：
+
+模板：
+//HDU2222->注意根据具体情况更改查询类型，若二维char存不下，请转换为string类型，并修改len函数
+#define _CRT_SECURE_NO_WARNINGS
+#include<cstdio>
+#include<cstring>
+#include<string>
+#include<string.h>
+#include<iostream>
+#include<algorithm>
+#include<queue>
+using namespace std;
+
+const int maxn = 1e6 + 10;
+int n;
+string a;
+char s[1000010];
+
+struct trie {
+    int next[maxn][26], fail[maxn], end[maxn];
+    int root, cnt;
+    int new_node() {
+        memset(next[cnt], -1, sizeof next[cnt]);
+        end[cnt++] = 0;
+        return cnt - 1;
+    }
+    void init() {
+        cnt = 0;
+        root = new_node();
+    }
+    void insert(char* buf) {//字典树插入一个单词
+        int len = strlen(buf);
+        int now = root;
+        for (int i = 0; i < len; i++) {
+            int id = buf[i] - 'a';
+            if (next[now][id] == -1) {
+                next[now][id] = new_node();
+            }
+            now = next[now][id];
+        }
+        end[now]++;
+    }
+    void build() {//构建fail指针
+        queue <int> q;
+        fail[root] = root;
+        for (int i = 0; i < 26; i++) {
+            if (next[root][i] == -1) {
+                next[root][i] = root;
+            }
+            else {
+                fail[next[root][i]] = root;
+                q.push(next[root][i]);
+            }
+        }
+        while (!q.empty()) {
+            int now = q.front(); q.pop();
+            for (int i = 0; i < 26; i++) {
+                if (next[now][i] == -1) {
+                    next[now][i] = next[fail[now]][i];
+                }
+                else {
+                    fail[next[now][i]] = next[fail[now]][i];
+                    q.push(next[now][i]);
+                }
+            }
+        }
+    }
+    int query(string buf) {
+        int len = buf.length();
+        int now = root;
+        int res = 0;
+        for (int i = 0; i < len; i++) {
+            int id = buf[i] - 'a';
+            now = next[now][id];
+            int tmp = now;
+            while (tmp != root) {
+                res += end[tmp];
+                end[tmp] = 0;//如果这里没有清0（删去），那么就会变成重复统计
+                tmp = fail[tmp];
+            }
+        }
+        return res;
+    }
+}ac;
+
+int main() {
+    int T;
+    scanf("%d", &T);
+    while (T--) {
+        ac.init();
+        scanf("%d", &n);
+        for (int i = 0; i < n; i++) {
+            scanf("%s", s);
+            ac.insert(s);
+        }
+        ac.build();
+        scanf("%s", s);
+        a = (string)s;	//转string类型，string长度为运算内存（无限大）
+        printf("%d\n", ac.query(a));
+    }
+    return 0;
+}
+
+注：
+此板仅供理解，AC自动机求模式串起始位置
+#define _CRT_SECURE_NO_WARNINGS
+#include<iostream>
+#include<algorithm>
+#include<cstdio>
+#include<cstring>
+#include<vector>
+#include<queue>
+#include<map>
+#include<math.h>
+using namespace std;
+typedef long long ll;
+const int INF = 0x3f3f3f3f;
+const int N = 2e6 + 10;
+int Case;
+int n, m;
+int num1[N];
+int min1, max1 = 0;
+int ans;
+
+
+using namespace std;
+
+#define DEBUG (1)
+
+#define Len(x)              sizeof(x)/sizeof(x[0]) 
+
+/**********************************************
+    aho corasick
+**********************************************/
+#define ALPHABET   (26)
+
+int cnt = 0;                // debug
+
+typedef struct _NODE
+{
+    int name;               // debug
+    vector<int> exist;
+	_NODE* fail;
+    _NODE* child[ALPHABET];
+    _NODE()
+    {
+        name = 0;           // debug
+        fail = NULL;
+        memset(child, NULL, ALPHABET * sizeof(_NODE*));
+    }
+}NODE;
+
+/**********************************************
+    "he" "she" "hers" "his"
+    ahishers
+     his
+       she
+        he
+        hers
+**********************************************/
+void print_matching_result(const char* T, int start, int len)
+{
+    for (int i = 0; i < start; i++)
+        printf(" ");
+    for (int i = 0; i < len; i++)
+        printf("%c", T[start + i]);
+    printf("\n");
+}
+
+/**********************************************
+    用于debug确认构造完成的状态机的[fail指针]和[exist信息]
+    bfs遍历一遍trie,按顺序给节点命名,同时输出fail指向信息
+**********************************************/
+void print_automaton_info(NODE* tmp)
+{
+    printf("---------------------info----------------------\n");
+    queue<NODE*> q;
+    q.push(tmp);
+    while (!q.empty())
+    {
+        NODE* tmp = q.front(); q.pop();
+        tmp->name = cnt++;
+        if (tmp->fail)
+            printf("%d --fail--> %d, has %d word\n", tmp->name, tmp->fail->name, tmp->exist.size());
+        for (int i = 0; i < ALPHABET; i++)
+            if (tmp->child[i])
+                q.push(tmp->child[i]);
+    }
+    printf("---------------------end----------------------\n");
+}
+
+void trie_insert(NODE* root, const char* word)
+{
+    NODE* tmp = root;
+
+    for (int i = 0; i < strlen(word); i++)
+    {
+        int c = word[i] - 'a';
+        if (NULL == tmp->child[c])
+            tmp->child[c] = new NODE();
+        tmp = tmp->child[c];
+    }
+    tmp->exist.push_back(strlen(word));
+}
+
+void ac_build(NODE* root, const char* P[], int n)
+{
+    for (int i = 0; i < n; i++)
+        trie_insert(root, P[i]);
+
+    queue<NODE*> q;
+    for (int i = 0; i < ALPHABET; i++)
+    {
+        if (root->child[i])
+        {
+            root->child[i]->fail = root;
+            q.push(root->child[i]);
+        }
+    }
+
+    while (!q.empty())  //fail指针的构建
+    {
+        NODE* x = q.front(); q.pop();
+        for (int i = 0; i < ALPHABET; i++)
+        {
+            if (x->child[i])
+            {
+                NODE* y = x->child[i], * fafail = x->fail;
+                /*
+                    x--fail-→fafail         x--fail-→fafail
+                      ↘ⁱ             ==>     ↘ⁱ        ↘ⁱ
+                        y                      y--fail--→★
+                */
+                while (fafail && NULL == fafail->child[i])  //只有根节点fafail指针为空
+                    fafail = fafail->fail;
+                if (NULL == fafail) //即root的fail指向空，因fafail=root->fail，故fafail为空
+                    y->fail = root;
+                else                //否则，存在fafail指向i字符，即fafail有i儿子
+                    y->fail = fafail->child[i]; //故y的fail指向，有i儿子的儿子节点
+
+                if (y->fail->exist.size())  //若y的fail指向的节点存在exist（为单词结尾）
+                    for (int j = 0; j < y->fail->exist.size(); j++) //则将该节点所有exist添加到y上（y的下一节点为y的fail指向的节点的孩子节点，即y节点==y的fail指针指向的节点）
+                        y->exist.push_back(y->fail->exist[j]);
+                q.push(y);  //y节点入队，否则BFS无法正常运行
+            }
+        }
+    }
+}
+
+void ac_query(NODE* root, const char* T)
+{
+    NODE* tmp = root;
+    for (int i = 0; i < strlen(T); i++)
+    {
+        int c = T[i] - 'a';
+        while (NULL == tmp->child[c] && tmp->fail)  //root的fail为空，故Trie树为aa.匹配串为aaa，则在aa后，回到根节点，跳出while循环
+            tmp = tmp->fail;
+        if (tmp->child[c])
+            tmp = tmp->child[c];    //节点推进
+        else
+            continue;               //tmp=root，跳出，无法匹配该字符串
+        if (tmp->exist.size())
+        {
+            for (int j = 0; j < tmp->exist.size(); j++)
+            {
+                int len = tmp->exist[j];    //读取第j个单词长度len
+                print_matching_result(T, i - len + 1, len);     //给出该单词在T中（故为i）的位置（起终）
+            }
+        }
+    }
+}
+
+void aho_corasick(const char* P[], int n, const char* T)
+{
+    printf("**********************************************\n");
+    for (int i = 0; i < n; i++)
+        printf("\"%s\" ", P[i]);
+    printf("\n%s\n", T);
+
+    NODE* root = new NODE();
+    ac_build(root, P, n);
+    ac_query(root, T);
+
+    print_automaton_info(root);         // debug
+}
+
+int main()
+{
+    const char* P[] = { "he", "she", "hers", "his", "is" };
+    const char* T = "ahishersheishiser";
+
+    aho_corasick(P, Len(P), T);
+
+    return 0;
+}

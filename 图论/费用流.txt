@@ -1,0 +1,61 @@
+//类似于单源最短路，把每条边的费用视作路径长度，求出到源点的最小费用然后贪心
+//建好图设好ST即可调用MinFee直接食用，最大流放在maxflow，最小费用放在minfee
+int n,m,S,T;
+typedef long long  ll;
+int maxflow=0,minfee=0;
+struct nod{
+    int u,v,next;
+    int c,f;
+}edge[MAXN];//前向星小改，加了个路径费用
+
+void insert(int u,int v,int c,int f){
+    edge[++cnt].u=u;edge[cnt].v=v;edge[cnt].f=f;edge[cnt].c=c;
+    edge[cnt].next=head[u]; head[u]=cnt;
+    edge[++cnt].u=v;edge[cnt].v=u;edge[cnt].f=-f;edge[cnt].c=0;//反向边容量为0 费用相反
+    edge[cnt].next=head[v]; head[v]=cnt;
+}
+int d[MAXN],incf[MAXN];//记录最小费用  当前节点剩余值
+//sp：因为dinic使用的是递归所以不需要记录每个节点的最小剩余容量
+bool inque[MAXN];//记录这个节点是否在队列之中
+int per[MAXN];//记录选用边方便溯回
+bool spfa(){//因为有反向边所以该图一定存在负权，这时唯一快速有效的手段是spfa
+    queue<int>  que;
+    for(int i=S;i<=T;i++)
+        d[i]=inf,inque[i]= false;
+    que.push(S);d[S]=0;inque[S]= true;
+    incf[S]=inf;
+    while(!que.empty()){
+        int x=que.front();que.pop();inque[x]=0;
+        search(i,x){
+            if(!edge[i].c)continue;
+            int y=edge[i].v;
+            if(d[y]>d[x]+edge[i].f){
+                d[y]=d[x]+edge[i].f;
+                incf[y]=min(incf[x],edge[i].c);
+                per[y]=i;
+                if(!inque[y])inque[y]=1,que.push(y);//如果y已经在队列中就不需要再次进行入队操作，这步属于简单优化
+            }
+        }
+    }
+    if(d[T]==inf)//终点不可达，流完了
+        return false;
+    return true;
+}
+void updata(){//更新每条边的容量
+    int x=T;
+    while(x!=S){
+        int i=per[x];
+        edge[i].c-=incf[T];
+        edge[i^1].c+=incf[T];
+        x=edge[i].u;
+    }
+    maxflow+=incf[T];
+    minfee+=d[T]*incf[T];//每次贪最小费用
+}
+
+
+int MinFee(){
+    while(spfa()){
+        updata();
+    }
+}

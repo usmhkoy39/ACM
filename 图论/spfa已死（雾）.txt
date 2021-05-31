@@ -1,0 +1,61 @@
+//代替BellmanFord处理负权问题，切不可在无负权的情况下使用
+int inque[MAXN],dis[MAXN],v[MAXN];          //v记录松弛次数
+bool spfa(int start)  {                     //  编号从1开始,一共有n个数据 如果没有负环返回false
+    queue<int> que;
+    memset(dis,0x3f,sizeof(dis));
+    memset(v,0,sizeof(v));
+    memset(inque,0,sizeof(inque));
+    dis[start]=0;
+    inque[start]=1;
+    que.push(start);
+    while(!que.empty()){
+        int x=que.front();que.pop();
+        inque[x]=0;
+        search(i,x){
+            int y=edge[i].v;
+            if(dis[y]>dis[x]+edge[i].h){
+                dis[y]=dis[x]+edge[i].h;
+                if(!inque[y]){
+                    if(++v[y]>=n)return false;//一个点最多被松弛n-1遍，第n遍说明有负环
+                    que.push(y),inque[y]=1;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+
+
+**************************************************************
+**************************************************************
+//差分约束系统 在题给多组xa-xb>=k的情况下，从xb到xa连一条权值为k的有向边
+//在建出来的图上跑spfa判断负环，如果没有负环，距离就是一组解，如果有，则无解
+//需要spfa作为前置算法
+bool DifCon(){
+    bool flag=true;
+    for(int i=1;flag&&i<=n;i++){
+        if(d[i]==inf)
+            flag&=spfa(i);
+    }
+    return flag;
+}
+
+
+****************************************************************
+****************************************************************
+//纯粹判断负环还可以用dfs
+//注意：dfs和spfa都可以造数据卡死，就是说，玄学
+int v[MAXN],dis[MAXN];
+bool dfs(int x){
+    v[x]=true;
+    search(i,x){
+        int y=edge[i].v;
+        if(dis[y]>dis[x]+edge[i].c){
+            dis[y]=dis[x]+edge[i].c;
+            if(v[y]||dfs(y))return 1;
+        }
+    }
+    v[x]=0;
+    return 0;
+}

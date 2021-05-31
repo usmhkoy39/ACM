@@ -1,0 +1,109 @@
+概念：
+KMP：D.E.Knuth，J.H.Morris和V.R.Pratt共同提出，故取其三人名字开头KMP，一种字符串的匹配算法
+最大公共前后缀（其实是真前缀和真后缀，分别是必须包含第一个字符但是不能包含最后一个字符和必须包含最后一个字符但是不能包含第一个字符）
+动态规划D[i]，字符串s（被匹配串）的前i+1个字母拥有的最大公共前后缀长度
+例：S:AAAAB,=>D[0]=0,D[1]=1(A),D[2]=2(AA),D[3]=3(AAA),D[4]=0(AAAA与AAAB，由于B是最后一个字符，所以前缀不可能包含B，后缀必须包含B，故最大公共前后缀长度为0)
+设匹配串为P,先求S的最大公共前后缀长度，当匹配失败是，被匹配串的待匹配字符位置j，将会被更新为前j个字符的最大公共前缀（长度值），匹配串的位置不变（按步骤一次推进即可），
+若当j=0时，匹配失败，未避免死循环，j不变，i++。当j!=0时，匹配失败，则j=D[j-1];
+
+综上：KMP算法实际是一种通过最大公共前后缀的匹配来节省不必要的匹配（去重复匹配），达到节省时间的算法
+
+适用问题：
+是否匹配以及匹配时出现的所有位置。求匹配区间：当匹配成功时，最后匹配位置-被匹配串长度=>匹配起点
+
+例子：
+HDU3746 Cyclic Nacklace(KMP的next数组应用题，检验掌握，注意理解前后缀关系)
+http://acm.hdu.edu.cn/showproblem.php?pid=3746
+NC13253 子串（KMP模板题目，转换进制+KMP，求是否存在匹配）
+https://ac.nowcoder.com/acm/problem/13253
+
+步骤：
+预处理最大模式串每个位置的最大公共前后缀，随后KMP比较，根据题意修改KMP内细节，主要是添加部分代码
+
+图例：
+
+模板：
+#define _CRT_SECURE_NO_WARNINGS
+#include<iostream>
+#include<algorithm>
+#include<cstdio>
+#include<cstring>
+#include<string>
+using namespace std;
+typedef long long ll;
+const int INF = 0x3f3f3f3f;
+const int N = 1e6 + 10;
+string s1;
+string str;
+int num;
+int nex[N];			//预处理模式串的最大公共前后缀
+
+string tran(int n, int k) {			//从1到n的数字转换为k进制字符串
+	string s;
+	for (int i = n; i >= 1; i--) {	//必须要从n开始，否则每个进制转换后的数字顺序是反的，例：n=3,k=3,正序：01,应该：10
+		int j = i;
+		while (j) {
+			if (j % k > 9)
+				s += (j % k - 10 + 'A');
+			else
+				s += (j % k + '0');
+			j /= k;
+		}
+	}
+	reverse(s.begin(), s.end());
+	return s;
+}
+
+void pre_Kmp(string t)//对被匹配串预处理nex数组
+{
+	memset(nex, -1, sizeof(nex));//nex第一位是-1
+	int en = t.size();
+	for (int i = 1; i < en; i++)//kmp
+	{
+		int j = nex[i - 1];//j等于前一位后缀最后一字母对应前缀字母的位置
+		while ((t[j + 1] != t[i]) && (j >= 0))//前缀下一位是否和当前位相同
+			j = nex[j];//不等于就去找j位对应前缀最后一位
+		if (t[j + 1] == t[i])//如果该位是等于之前某一前缀下一位一位
+			nex[i] = j + 1;
+		else//该位不是任何前缀的下一位
+			nex[i] = -1;
+	}
+}
+
+bool KMP(string s, string t) {
+	pre_Kmp(t);
+	int i = 0, j = 0;
+	int len = s.size();
+	int en = t.size();
+	while (i < len)
+	{
+		if (s[i] == t[j])//两字符串都进一位
+		{
+			i++; j++;
+			if (j == en)return 1;//如果子串已经到末尾，即找到
+		}
+		else
+		{
+			if (j == 0)i++;//子串第一位
+			else j = nex[j - 1] + 1;//重新定位子串字母位置
+		}
+	}
+	return 0;
+}
+
+int main() {
+	cin >> num >> str;
+	int i;
+	for (i = 2; i <= 16; i++) {
+		s1 = tran(num, i);
+		if (KMP(s1, str)) {
+			cout << "yes" << endl;
+			break;
+		}
+	}
+	if (i == 17)
+		cout << "no" << endl;
+}
+
+注：
+

@@ -1,0 +1,15 @@
+
+
+//floyd算法求任意两点之间的最短距离
+//因为floyd求的一般都是稠密图，储存方式邻接矩阵
+//floyd也可以用来在点数较小的情况下求区间闭包和可达性
+//复杂度为O(N^3)
+int edge[MAXN][MAXN];      //邻接矩阵
+int dis[MAXN][MAXN];
+void Floyd(int n){//　编号从1 开始
+    memcpy(dis,edge,sizeof(edge));
+    for(int k=1;k<=n;k++)
+        for(int i=1;i<=n;i++)
+            for(int j=1;j<=n;j++)
+                dis[i][j]=min(dis[i][j],dis[i][k]+dis[k][j]);
+}
